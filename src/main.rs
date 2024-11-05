@@ -165,7 +165,7 @@ fn main() -> anyhow::Result<()> {
         let bar = ProgressBar::new(total_len);
         bar.set_style(
             ProgressStyle::with_template(
-                "{msg} [{bar:30}] ({bytes}/{total_bytes}) [{bytes_per_sec}]",
+                "[{wide_bar}] ({bytes}/{total_bytes}) [{bytes_per_sec}] {percent_precise}%",
             )?
             .progress_chars("=> "),
         );
@@ -180,11 +180,6 @@ fn main() -> anyhow::Result<()> {
 
             let mut file = File::open(path)?;
             let mut digest = vec![0u8; hash_output_size as usize].into_boxed_slice();
-
-            bar.set_message(format!(
-                "Hashing file {}...",
-                relative_path.as_ref().unwrap_or(path).display()
-            ));
 
             loop {
                 let bytes_read = file.read(&mut input_buffer)?;
