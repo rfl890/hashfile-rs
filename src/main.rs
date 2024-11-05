@@ -209,12 +209,14 @@ fn main() -> anyhow::Result<()> {
                 ));
             }
 
-            bar.println(format!(
-                "[{}] {}: {}",
-                algorithm_name,
-                relative_path.as_ref().unwrap_or(path).display(),
-                hex::encode(digest)
-            ));
+            bar.suspend(|| {
+                println!(
+                    "[{}] {}: {}",
+                    algorithm_name,
+                    relative_path.as_ref().unwrap_or(path).display(),
+                    hex::encode(digest)
+                );
+            })
         }
 
         bar.finish_and_clear();
