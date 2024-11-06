@@ -16,7 +16,7 @@ use windows::Win32::Security::Cryptography::{
     BCRYPT_SHA512_ALGORITHM,
 };
 
-pub const BUFFER_SIZE: usize = 1024 * 1024 * 2;
+pub const BUFFER_SIZE: usize = 1024 * 1024 * 1;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 #[repr(usize)]
@@ -178,7 +178,15 @@ fn main() -> anyhow::Result<()> {
                 None
             };
 
-            let mut file = File::open(path)?;
+            let mut file = match File::open(path) {
+                Ok(f) => f,
+                Err(e) => {
+                    bar.suspend(|| {
+                        eprintln!("Failed to open file {}: {}", path.display(), e);
+                    });
+                    continue
+                }
+            };
             let mut digest = vec![0u8; hash_output_size as usize].into_boxed_slice();
 
             loop {
