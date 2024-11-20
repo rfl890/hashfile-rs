@@ -16,7 +16,7 @@ use windows::Win32::Security::Cryptography::{
     BCRYPT_SHA512_ALGORITHM,
 };
 
-pub const BUFFER_SIZE: usize = 1024 * 1024 * 1;
+pub const BUFFER_SIZE: usize = 1024 * 1024 * 2;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 #[repr(usize)]
@@ -126,7 +126,7 @@ fn main() -> anyhow::Result<()> {
             &mut hash,
             Some(&mut *hash_object),
             None,
-            0,
+            BCRYPT_HASH_REUSABLE_FLAG.0,
         );
         if status != STATUS_SUCCESS {
             return Err(anyhow!(
@@ -156,16 +156,20 @@ fn main() -> anyhow::Result<()> {
             total_len += metadata.len();
         }
 
+        let mut total_files: u64 = file_list.len() as u64;
+        let mut files_read: u64 = 0;
+
+
         eprintln!(
             "Total length of {} file(s): {}",
-            file_list.len(),
+            total_files,
             HumanBytes(total_len)
         );
 
         let bar = ProgressBar::new(total_len);
         bar.set_style(
             ProgressStyle::with_template(
-                "[{wide_bar}] ({bytes}/{total_bytes}) [{bytes_per_sec}] {percent_precise}%",
+                "[{wide_bar}] ({bytes}/{total_bytes}) [{bytes_per_sec}] {percent_precise}% {msg} files",
             )?
             .progress_chars("=> "),
         );
@@ -201,6 +205,8 @@ fn main() -> anyhow::Result<()> {
                     return Err(anyhow!("Failed call to BCryptHashData: {:#010x}", status.0));
                 }
 
+                files_read += 1;
+                bar.set_message(format!("{}/{}", files_read, total_files));
                 bar.inc(bytes_read as u64);
             }
 
