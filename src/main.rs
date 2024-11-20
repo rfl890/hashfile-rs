@@ -174,6 +174,8 @@ fn main() -> anyhow::Result<()> {
             .progress_chars("=> "),
         );
 
+        bar.set_message(format!("{}/{}", files_read, total_files));
+
         let mut input_buffer = vec![0u8; BUFFER_SIZE].into_boxed_slice();
         for path in &file_list {
             let relative_path = if cli.relative_paths {
@@ -205,8 +207,6 @@ fn main() -> anyhow::Result<()> {
                     return Err(anyhow!("Failed call to BCryptHashData: {:#010x}", status.0));
                 }
 
-                files_read += 1;
-                bar.set_message(format!("{}/{}", files_read, total_files));
                 bar.inc(bytes_read as u64);
             }
 
@@ -218,6 +218,9 @@ fn main() -> anyhow::Result<()> {
                 ));
             }
 
+            files_read += 1;
+            bar.set_message(format!("{}/{}", files_read, total_files));
+
             bar.suspend(|| {
                 println!(
                     "[{}] {}: {}",
@@ -225,7 +228,7 @@ fn main() -> anyhow::Result<()> {
                     relative_path.as_ref().unwrap_or(path).display(),
                     hex::encode(digest)
                 );
-            })
+            });
         }
 
         bar.finish_and_clear();
