@@ -174,6 +174,7 @@ fn main() -> anyhow::Result<()> {
             .progress_chars("=> "),
         );
 
+
         bar.set_message(format!("{}/{}", files_read, total_files));
 
         let mut input_buffer = vec![0u8; BUFFER_SIZE].into_boxed_slice();
